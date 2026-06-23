@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
-# Read node role (default: master)
+# Read node role
 ROLE="${1:-master}"
 
-# Disable needrestart for Ubuntu 24.04
+# Disable needrestart
 export DEBIAN_FRONTEND=noninteractive
 export NEEDRESTART_MODE=a
 export NEEDRESTART_SUSPEND=1
 
 echo "==> Configuring node: $ROLE"
 
-# Install base packages (headless Java)
+# Install base packages
 apt-get update
 apt-get install -y openjdk-17-jdk-headless python3 python3-pip wget
 
@@ -78,7 +78,7 @@ fi
 
 HADOOP_CONF="/usr/local/hadoop-3.5.0/etc/hadoop"
 
-# core-site.xml: Master node setup with persistent storage
+# core-site.xml
 cat <<EOF > $HADOOP_CONF/core-site.xml
 <configuration>
     <property><name>fs.defaultFS</name><value>hdfs://master:9000</value></property>
@@ -86,7 +86,7 @@ cat <<EOF > $HADOOP_CONF/core-site.xml
 </configuration>
 EOF
 
-# hdfs-site.xml: Replication and UI bind
+# hdfs-site.xml
 cat <<EOF > $HADOOP_CONF/hdfs-site.xml
 <configuration>
     <property><name>dfs.replication</name><value>2</value></property>
@@ -100,7 +100,7 @@ NM_MEM=$((TOTAL_MEM_MB - 2048))
 TOTAL_CORES=$(nproc)
 NM_CORES=$((TOTAL_CORES - 1))
 
-# yarn-site.xml: Resources and vmem checks
+# yarn-site.xml
 cat <<EOF > $HADOOP_CONF/yarn-site.xml
 <configuration>
     <property><name>yarn.resourcemanager.hostname</name><value>master</value></property>
@@ -111,7 +111,7 @@ cat <<EOF > $HADOOP_CONF/yarn-site.xml
 </configuration>
 EOF
 
-# Install Python libraries (bypass system-wide pip restrictions & ignore debian jsonschema)
+# Install Python libraries
 echo "==> Installing Python packages..."
 pip3 install jupyter pandas matplotlib seaborn pyspark==4.1.2 --break-system-packages --ignore-installed jsonschema
 
@@ -119,15 +119,14 @@ echo "==> Installing systemd units for Hadoop/YARN daemons..."
 
 HADOOP_BIN="/usr/local/hadoop-3.5.0/bin"
 
-# Environment for the units (systemd does NOT read /etc/profile.d).
+# Environment for the units
 cat <<EOF > /etc/hadoop-cluster.env
 JAVA_HOME=${JAVA_PATH}
 HADOOP_HOME=/usr/local/hadoop-3.5.0
 HADOOP_CONF_DIR=/usr/local/hadoop-3.5.0/etc/hadoop
 EOF
 
-# Helper: write a unit that runs a Hadoop daemon in the FOREGROUND as vagrant.
-# (Foreground = Type=simple; logs go to journald -> `journalctl -u <name>`.)
+# Helper
 write_unit() {  # $1=unit name  $2=description  $3=ExecStart command
     cat <<EOF > /etc/systemd/system/$1.service
 [Unit]
@@ -150,7 +149,6 @@ EOF
 }
 
 if [ "$ROLE" == "master" ]; then
-    # Format HDFS once; data persists in /home/vagrant/hadoop-data across reboots.
     su - vagrant -c "if [ ! -d /home/vagrant/hadoop-data/dfs/name ]; then $HADOOP_BIN/hdfs namenode -format -force; fi"
 
     write_unit hadoop-namenode        "Hadoop HDFS NameNode"         "$HADOOP_BIN/hdfs namenode"
