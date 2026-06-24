@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Read node role
+# Read node role: "master" | "worker"
 ROLE="${1:-master}"
 
 # Disable needrestart
@@ -14,12 +14,11 @@ echo "==> Configuring node: $ROLE"
 apt-get update
 apt-get install -y openjdk-17-jdk-headless python3 python3-pip wget
 
-# Configure local DNS
+# Configure local DNS (2-node cluster)
 cat <<EOF > /etc/hosts
 127.0.0.1 localhost
 192.168.56.10 master
-192.168.56.11 worker1
-192.168.56.12 worker2
+192.168.56.11 worker
 EOF
 
 # Move to shared directory
@@ -86,10 +85,10 @@ cat <<EOF > $HADOOP_CONF/core-site.xml
 </configuration>
 EOF
 
-# hdfs-site.xml
+# hdfs-site.xml  (replication = 1: single DataNode in this 2-node setup)
 cat <<EOF > $HADOOP_CONF/hdfs-site.xml
 <configuration>
-    <property><name>dfs.replication</name><value>2</value></property>
+    <property><name>dfs.replication</name><value>1</value></property>
     <property><name>dfs.namenode.http-address</name><value>0.0.0.0:9870</value></property>
 </configuration>
 EOF
@@ -104,6 +103,7 @@ NM_CORES=$((TOTAL_CORES - 1))
 cat <<EOF > $HADOOP_CONF/yarn-site.xml
 <configuration>
     <property><name>yarn.resourcemanager.hostname</name><value>master</value></property>
+    <property><name>yarn.resourcemanager.bind-host</name><value>0.0.0.0</value></property>
     <property><name>yarn.nodemanager.resource.memory-mb</name><value>${NM_MEM}</value></property>
     <property><name>yarn.nodemanager.resource.cpu-vcores</name><value>${NM_CORES}</value></property>
     <property><name>yarn.nodemanager.vmem-check-enabled</name><value>false</value></property>
@@ -126,7 +126,7 @@ HADOOP_HOME=/usr/local/hadoop-3.5.0
 HADOOP_CONF_DIR=/usr/local/hadoop-3.5.0/etc/hadoop
 EOF
 
-# Helper
+# Helper: write a systemd unit running a Hadoop daemon in the foreground as vagrant.
 write_unit() {  # $1=unit name  $2=description  $3=ExecStart command
     cat <<EOF > /etc/systemd/system/$1.service
 [Unit]
