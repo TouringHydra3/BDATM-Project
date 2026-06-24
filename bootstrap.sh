@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Read node role: "master" | "worker"
+# Read node role
 ROLE="${1:-master}"
 
 # Disable needrestart
@@ -14,7 +14,7 @@ echo "==> Configuring node: $ROLE"
 apt-get update
 apt-get install -y openjdk-17-jdk-headless python3 python3-pip wget
 
-# Configure local DNS (2-node cluster)
+# Configure local DNS
 cat <<EOF > /etc/hosts
 127.0.0.1 localhost
 192.168.56.10 master
@@ -85,7 +85,7 @@ cat <<EOF > $HADOOP_CONF/core-site.xml
 </configuration>
 EOF
 
-# hdfs-site.xml  (replication = 1: single DataNode in this 2-node setup)
+# hdfs-site.xml
 cat <<EOF > $HADOOP_CONF/hdfs-site.xml
 <configuration>
     <property><name>dfs.replication</name><value>1</value></property>
@@ -126,7 +126,7 @@ HADOOP_HOME=/usr/local/hadoop-3.5.0
 HADOOP_CONF_DIR=/usr/local/hadoop-3.5.0/etc/hadoop
 EOF
 
-# Helper: write a systemd unit running a Hadoop daemon in the foreground as vagrant.
+# Helper
 write_unit() {  # $1=unit name  $2=description  $3=ExecStart command
     cat <<EOF > /etc/systemd/system/$1.service
 [Unit]
