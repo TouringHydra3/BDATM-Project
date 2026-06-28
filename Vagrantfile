@@ -10,7 +10,7 @@ Vagrant.configure("2") do |config|
 
   nodes = [
     { name: "master", ip: "192.168.56.10", memory: 2560, cpus: 2, ssh_port: 2222 },
-    { name: "worker", ip: "192.168.56.11", memory: 7168, cpus: 4, ssh_port: 2223 },
+    { name: "worker", ip: "192.168.56.11", memory: 13312, cpus: 6, ssh_port: 2223 },
   ]
 
   nodes.each do |node|
