@@ -9,7 +9,7 @@ Vagrant.configure("2") do |config|
   config.ssh.insert_key  = false
 
   nodes = [
-    { name: "master", ip: "192.168.56.10", memory: 2560, cpus: 2, ssh_port: 2222 },
+    { name: "master", ip: "192.168.56.10", memory: 2560,  cpus: 2, ssh_port: 2222 },
     { name: "worker", ip: "192.168.56.11", memory: 13312, cpus: 6, ssh_port: 2223 },
   ]
 
@@ -20,10 +20,10 @@ Vagrant.configure("2") do |config|
       m.vm.network "forwarded_port", guest: 22, host: node[:ssh_port], id: "ssh"
 
       if node[:name] == "master"
-        m.vm.network "forwarded_port", guest: 8888,  host: 8888   # Jupyter
-        m.vm.network "forwarded_port", guest: 9870,  host: 9870   # HDFS NameNode
-        m.vm.network "forwarded_port", guest: 8088,  host: 8088   # YARN ResourceManager
-        m.vm.network "forwarded_port", guest: 18080, host: 18080  # Spark History
+        m.vm.network "forwarded_port", guest: 8888, host: 8888  # Jupyter
+        m.vm.network "forwarded_port", guest: 9870, host: 9870  # HDFS NameNode
+        m.vm.network "forwarded_port", guest: 8088, host: 8088  # YARN ResourceManager
+        m.vm.network "forwarded_port", guest: 4040, host: 4040  # Spark Live UI
       end
 
       m.vm.provider "virtualbox" do |vb|
